@@ -171,7 +171,9 @@ public class SpigotHandler extends SpigotAdapter implements SpigotInterface {
                     }
 
                     ItemStack item = (ItemStack) args[argIndex++];
-                    message.append(item.displayName());
+                    ItemStack displayItem = item.clone();
+                    displayItem.setAmount(Math.max(1, Math.min(item.getAmount(), 99)));
+                    message.append(displayItem.displayName());
                 }
             } else {
                 builder.append(matcher.group(2));
