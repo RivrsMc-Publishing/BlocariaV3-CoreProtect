@@ -126,8 +126,9 @@ public class SpigotAdapter implements SpigotInterface {
                         if (!(args[index] instanceof ItemStack))
                             return Component.text("INVALID_ITEM_PASSED");
                         ItemStack item = (ItemStack) args[index++];
-
-                        return item.displayName();
+                        ItemStack displayItem = item.clone();
+                        displayItem.setAmount(Math.max(1, Math.min(item.getAmount(), 99)));
+                        return displayItem.displayName();
                     }
                 }));
 
