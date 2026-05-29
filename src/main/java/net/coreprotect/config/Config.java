@@ -10,11 +10,14 @@ import java.io.OutputStreamWriter;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 
 import org.bukkit.Bukkit;
+import org.bukkit.Material;
 import org.bukkit.World;
 
 import net.coreprotect.CoreProtect;
@@ -87,6 +90,8 @@ public class Config extends Language {
     public boolean UNKNOWN_LOGGING;
     public boolean USERNAME_CHANGES;
     public boolean WORLDEDIT;
+    public Set<Material> EXCLUDED_BLOCK_BREAK_MATERIALS;
+    public Set<Material> EXCLUDED_ITEM_DROP_MATERIALS;
     public int MAXIMUM_POOL_SIZE;
     public int MYSQL_PORT;
     public int DEFAULT_RADIUS;
@@ -141,6 +146,11 @@ public class Config extends Language {
         DEFAULT_VALUES.put("player-sessions", "true");
         DEFAULT_VALUES.put("username-changes", "true");
         DEFAULT_VALUES.put("worldedit", "true");
+        DEFAULT_VALUES.put("excluded-block-break-materials", "STONE,COBBLESTONE,DEEPSLATE,COBBLED_DEEPSLATE,COAL_ORE,IRON_ORE,GOLD_ORE,DIAMOND_ORE,EMERALD_ORE,LAPIS_ORE,REDSTONE_ORE,COPPER_ORE,DEEPSLATE_COAL_ORE,DEEPSLATE_IRON_ORE,DEEPSLATE_GOLD_ORE,DEEPSLATE_DIAMOND_ORE,DEEPSLATE_EMERALD_ORE,DEEPSLATE_LAPIS_ORE,DEEPSLATE_REDSTONE_ORE,DEEPSLATE_COPPER_ORE,ANCIENT_DEBRIS,NETHER_QUARTZ_ORE,NETHER_GOLD_ORE");
+        DEFAULT_VALUES.put("excluded-item-drop-materials", "COAL,RAW_IRON,RAW_GOLD,DIAMOND,EMERALD,LAPIS_LAZULI,REDSTONE,RAW_COPPER,QUARTZ,GOLD_NUGGET,NETHER_QUARTZ,NETHER_GOLD_ORE,AMETHYST_SHARD,EXPERIENCE_BOTTLE");
+
+        HEADERS.put("excluded-block-break-materials", new String[] { "# Comma-separated list of block materials whose breaks will NOT be logged.", "# Useful to reduce lag from tools that break many blocks at once (e.g. hammers)." });
+        HEADERS.put("excluded-item-drop-materials", new String[] { "# Comma-separated list of item materials whose drops will NOT be logged.", "# Useful to reduce lag from bulk item drops caused by area-break tools." });
 
         HEADERS.put("donation-key", new String[] { "# CoreProtect is donationware. Obtain a donation key from coreprotect.net/donate/" });
         HEADERS.put("use-mysql", new String[] { "# MySQL is optional and not required.", "# If you prefer to use MySQL, enable the following and fill out the fields." });
@@ -245,6 +255,25 @@ public class Config extends Language {
         this.PLAYER_SESSIONS = this.getBoolean("player-sessions");
         this.USERNAME_CHANGES = this.getBoolean("username-changes");
         this.WORLDEDIT = this.getBoolean("worldedit");
+        this.EXCLUDED_BLOCK_BREAK_MATERIALS = parseMaterialSet(this.getString("excluded-block-break-materials"));
+        this.EXCLUDED_ITEM_DROP_MATERIALS = parseMaterialSet(this.getString("excluded-item-drop-materials"));
+    }
+
+    private static Set<Material> parseMaterialSet(String raw) {
+        Set<Material> result = new HashSet<>();
+        if (raw == null || raw.isEmpty()) {
+            return result;
+        }
+        for (String s : raw.split(",")) {
+            String name = s.trim().toUpperCase();
+            if (!name.isEmpty()) {
+                try {
+                    result.add(Material.valueOf(name));
+                }
+                catch (IllegalArgumentException ignored) {}
+            }
+        }
+        return result;
     }
 
     public static void init() throws IOException {

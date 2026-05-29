@@ -89,6 +89,9 @@ public final class BlockBreakListener extends Queue implements Listener {
         List<Block> placementMap = new ArrayList<>();
         Material type = block.getType();
         World world = block.getWorld();
+        if (Config.getConfig(world).EXCLUDED_BLOCK_BREAK_MATERIALS.contains(type)) {
+            return;
+        }
         int x = block.getX();
         int y = block.getY();
         int z = block.getZ();

@@ -22,6 +22,9 @@ public final class PlayerDropItemListener extends Queue implements Listener {
         if (!Config.getConfig(location.getWorld()).ITEM_DROPS || itemStack == null) {
             return;
         }
+        if (Config.getConfig(location.getWorld()).EXCLUDED_ITEM_DROP_MATERIALS.contains(itemStack.getType())) {
+            return;
+        }
 
         String loggingItemId = user.toLowerCase(Locale.ROOT) + "." + location.getBlockX() + "." + location.getBlockY() + "." + location.getBlockZ();
         int itemId = getItemId(loggingItemId);
