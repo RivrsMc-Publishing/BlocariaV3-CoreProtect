@@ -135,7 +135,7 @@ public class Database extends Queue {
 
     public static void containerBreakCheck(String user, Material type, Object container, ItemStack[] contents, Location location) {
         if (BlockGroup.CONTAINERS.contains(type) && !BlockGroup.SHULKER_BOXES.contains(type)) {
-            if (Config.getConfig(location.getWorld()).ITEM_TRANSACTIONS) {
+            if (Config.getConfig(location.getWorld()).itemTransactionsEnabled(type)) {
                 try {
                     if (contents == null) {
                         contents = ItemUtils.getContainerContents(type, container, location);

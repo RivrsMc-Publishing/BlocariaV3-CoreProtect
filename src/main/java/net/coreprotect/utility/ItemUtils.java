@@ -228,7 +228,7 @@ public class ItemUtils {
 
     public static ItemStack[] getContainerContents(Material type, Object container, Location location) {
         ItemStack[] contents = null;
-        if (Config.getConfig(location.getWorld()).ITEM_TRANSACTIONS && BlockGroup.CONTAINERS.contains(type)) {
+        if (Config.getConfig(location.getWorld()).itemTransactionsEnabled(type) && BlockGroup.CONTAINERS.contains(type)) {
             try {
                 // container may be null if called from within WorldEdit logger
                 if (container == null) {

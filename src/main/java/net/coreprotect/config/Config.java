@@ -22,6 +22,7 @@ import org.bukkit.World;
 
 import net.coreprotect.CoreProtect;
 import net.coreprotect.language.Language;
+import net.coreprotect.model.BlockGroup;
 import net.coreprotect.thread.Scheduler;
 
 public class Config extends Language {
@@ -80,6 +81,7 @@ public class Config extends Language {
     public boolean LAVA_FLOW;
     public boolean LIQUID_TRACKING;
     public boolean ITEM_TRANSACTIONS;
+    public boolean DISPENSER_ITEM_TRANSACTIONS;
     public boolean ITEM_DROPS;
     public boolean ITEM_PICKUPS;
     public boolean HOPPER_TRANSACTIONS;
@@ -137,6 +139,7 @@ public class Config extends Language {
         DEFAULT_VALUES.put("lava-flow", "true");
         DEFAULT_VALUES.put("liquid-tracking", "true");
         DEFAULT_VALUES.put("item-transactions", "true");
+        DEFAULT_VALUES.put("dispenser-item-transactions", "true");
         DEFAULT_VALUES.put("item-drops", "true");
         DEFAULT_VALUES.put("item-pickups", "true");
         DEFAULT_VALUES.put("hopper-transactions", "true");
@@ -184,7 +187,8 @@ public class Config extends Language {
         HEADERS.put("water-flow", new String[] { "# Logs water flow. If water destroys other blocks, such as torches,", "# this allows it to be properly rolled back." });
         HEADERS.put("lava-flow", new String[] { "# Logs lava flow. If lava destroys other blocks, such as torches,", "# this allows it to be properly rolled back." });
         HEADERS.put("liquid-tracking", new String[] { "# Allows liquid to be properly tracked and linked to players.", "# For example, if a player places water which flows and destroys torches,", "# it can all be properly restored by rolling back that single player." });
-        HEADERS.put("item-transactions", new String[] { "# Track item transactions, such as when a player takes items from", "# a chest, furnace, or dispenser." });
+        HEADERS.put("item-transactions", new String[] { "# Track item transactions, such as when a player takes items from", "# a chest. Dispensers, droppers, and furnaces are tracked separately", "# via \"dispenser-item-transactions\"." });
+        HEADERS.put("dispenser-item-transactions", new String[] { "# Track item transactions for dispensers, droppers, and furnaces", "# (including blast furnaces and smokers). These can generate a lot of", "# activity, so they can be disabled separately for performance." });
         HEADERS.put("item-drops", new String[] { "# Logs items dropped by players." });
         HEADERS.put("item-pickups", new String[] { "# Logs items picked up by players." });
         HEADERS.put("hopper-transactions", new String[] { "# Track all hopper transactions, such as when a hopper removes items from a", "# chest, furnace, or dispenser." });
@@ -246,6 +250,7 @@ public class Config extends Language {
         this.LAVA_FLOW = this.getBoolean("lava-flow");
         this.LIQUID_TRACKING = this.getBoolean("liquid-tracking");
         this.ITEM_TRANSACTIONS = this.getBoolean("item-transactions");
+        this.DISPENSER_ITEM_TRANSACTIONS = this.getBoolean("dispenser-item-transactions");
         this.ITEM_DROPS = this.getBoolean("item-drops");
         this.ITEM_PICKUPS = this.getBoolean("item-pickups");
         this.HOPPER_TRANSACTIONS = this.getBoolean("hopper-transactions");
@@ -257,6 +262,18 @@ public class Config extends Language {
         this.WORLDEDIT = this.getBoolean("worldedit");
         this.EXCLUDED_BLOCK_BREAK_MATERIALS = parseMaterialSet(this.getString("excluded-block-break-materials"));
         this.EXCLUDED_ITEM_DROP_MATERIALS = parseMaterialSet(this.getString("excluded-item-drop-materials"));
+    }
+
+    /**
+     * Returns whether item transactions should be tracked for the given container type.
+     * Dispensers, droppers, and furnaces are governed by "dispenser-item-transactions";
+     * all other containers (chests, etc.) are governed by "item-transactions".
+     */
+    public boolean itemTransactionsEnabled(Material type) {
+        if (type != null && BlockGroup.DISPENSER_CONTAINERS.contains(type)) {
+            return this.DISPENSER_ITEM_TRANSACTIONS;
+        }
+        return this.ITEM_TRANSACTIONS;
     }
 
     private static Set<Material> parseMaterialSet(String raw) {

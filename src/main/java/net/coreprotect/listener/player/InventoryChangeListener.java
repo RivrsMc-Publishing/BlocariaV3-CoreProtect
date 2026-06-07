@@ -83,6 +83,9 @@ public final class InventoryChangeListener extends Queue implements Listener {
                 Material type = blockState.getType();
 
                 if (BlockGroup.CONTAINERS.contains(type) && blockState instanceof InventoryHolder) {
+                    if (!Config.getConfig(location.getWorld()).itemTransactionsEnabled(type)) {
+                        return false;
+                    }
                     InventoryHolder inventoryHolder = (InventoryHolder) blockState;
                     return onInventoryInteract(user, inventoryHolder.getInventory(), inventoryData, null, location, false);
                 }
@@ -94,8 +97,9 @@ public final class InventoryChangeListener extends Queue implements Listener {
     static boolean onInventoryInteract(String user, final Inventory inventory, ItemStack[] inventoryData, Material containerType, Location location, boolean aSync) {
         if (inventory != null && location != null) {
             World world = location.getWorld();
+            Config config = Config.getConfig(world);
 
-            if (Config.getConfig(world).ITEM_TRANSACTIONS) {
+            if (config.ITEM_TRANSACTIONS || config.DISPENSER_ITEM_TRANSACTIONS) {
                 Material type = Material.CHEST;
                 Location playerLocation = null;
 
@@ -135,6 +139,10 @@ public final class InventoryChangeListener extends Queue implements Listener {
                 }
 
                 if (playerLocation != null) {
+                    if (!config.itemTransactionsEnabled(type)) {
+                        return false;
+                    }
+
                     if (inventoryData == null) {
                         inventoryData = inventory.getContents();
                     }
@@ -263,7 +271,11 @@ public final class InventoryChangeListener extends Queue implements Listener {
             return;
         }
 
-        if (!Config.getConfig(location.getWorld()).ITEM_TRANSACTIONS) {
+        // Resolve the block type on the main thread. Dispensers, droppers, and furnaces are single
+        // blocks, so the type is accurate here; other containers (incl. double chests, where the
+        // location may be air) fall through to ITEM_TRANSACTIONS.
+        final Material blockType = location.getBlock().getType();
+        if (!Config.getConfig(location.getWorld()).itemTransactionsEnabled(blockType)) {
             return;
         }
 
@@ -280,7 +292,9 @@ public final class InventoryChangeListener extends Queue implements Listener {
         final long taskStarted = InventoryChangeListener.tasksStarted.incrementAndGet();
         Scheduler.runTaskAsynchronously(CoreProtect.getInstance(), () -> {
             try {
-                Material containerType = (enderChest != true ? null : Material.ENDER_CHEST);
+                // Pass dispenser-family types through so onInventoryInteract applies the correct
+                // (dispenser-item-transactions) gate; other containers keep the CHEST default.
+                Material containerType = enderChest ? Material.ENDER_CHEST : (BlockGroup.DISPENSER_CONTAINERS.contains(blockType) ? blockType : null);
                 InventoryChangeListener.checkTasks(taskStarted);
                 inventoryProcessing.remove(loggingChestId);
                 onInventoryInteract(player.getName(), inventory, containerState, containerType, inventoryLocation, true);
