@@ -1,11 +1,11 @@
 package net.coreprotect.model;
 
+import org.bukkit.Material;
+import org.bukkit.Tag;
+
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
-
-import org.bukkit.Material;
-import org.bukkit.Tag;
 
 public final class BlockGroup {
 
@@ -52,6 +52,16 @@ public final class BlockGroup {
         if (shortGrass != null) {
             TRACK_TOP.add(shortGrass);
             NON_ATTACHABLE.add(shortGrass);
+        }
+
+        String[] cropNames = new String[]{"CARROTS", "POTATOES", "BEETROOTS", "TORCHFLOWER_CROP", "PITCHER_CROP"};
+        for (String cropName : cropNames) {
+            Material cropMaterial = Material.getMaterial(cropName);
+            if (cropMaterial != null) {
+                TRACK_TOP.add(cropMaterial);
+                NATURAL_BLOCKS.add(cropMaterial);
+                NON_ATTACHABLE.add(cropMaterial);
+            }
         }
 
         TRACK_ANY.addAll(BUTTONS);
