@@ -1,21 +1,20 @@
 package net.coreprotect.utility;
 
-import java.io.ByteArrayOutputStream;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
-
+import net.coreprotect.bukkit.BukkitAdapter;
+import net.coreprotect.config.Config;
+import net.coreprotect.config.ConfigHandler;
+import net.coreprotect.database.rollback.Rollback;
+import net.coreprotect.model.BlockGroup;
+import net.coreprotect.utility.serialize.ItemMetaHandler;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
-import org.bukkit.block.BlockState;
-import org.bukkit.entity.EntityType;
+import org.bukkit.block.Jukebox;
+import org.bukkit.configuration.serialization.ConfigurationSerialization;
+import org.bukkit.configuration.serialization.DelegateDeserialization;
 import org.bukkit.entity.ItemFrame;
 import org.bukkit.entity.LivingEntity;
+import org.bukkit.entity.Player;
 import org.bukkit.inventory.EntityEquipment;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
@@ -23,11 +22,8 @@ import org.bukkit.inventory.PlayerInventory;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.util.io.BukkitObjectOutputStream;
 
-import net.coreprotect.bukkit.BukkitAdapter;
-import net.coreprotect.config.Config;
-import net.coreprotect.config.ConfigHandler;
-import net.coreprotect.model.BlockGroup;
-import net.coreprotect.utility.serialize.ItemMetaHandler;
+import java.io.ByteArrayOutputStream;
+import java.util.*;
 
 public class ItemUtils {
 
@@ -247,7 +243,7 @@ public class ItemUtils {
                     contents = getItemFrameItem(entity);
                 }
                 else if (type == Material.JUKEBOX) {
-                    org.bukkit.block.Jukebox blockState = (org.bukkit.block.Jukebox) ((Block) container).getState();
+                    Jukebox blockState = (Jukebox) ((Block) container).getState();
                     contents = BlockUtils.getJukeboxItem(blockState);
                 }
                 else {
@@ -328,10 +324,14 @@ public class ItemUtils {
     }
 
     public static ItemStack newItemStack(Material type, int amount) {
+        if (type == null || !type.isItem()) {
+            return new ItemStack(Material.AIR, amount);
+        }
+
         return new ItemStack(type, amount);
     }
 
-    public static void updateInventory(org.bukkit.entity.Player player) {
+    public static void updateInventory(Player player) {
         player.updateInventory();
     }
     
@@ -361,8 +361,8 @@ public class ItemUtils {
 
     public static ItemMeta deserializeItemMeta(Class<? extends ItemMeta> itemMetaClass, Map<String, Object> args) {
         try {
-            org.bukkit.configuration.serialization.DelegateDeserialization delegate = itemMetaClass.getAnnotation(org.bukkit.configuration.serialization.DelegateDeserialization.class);
-            return (ItemMeta) org.bukkit.configuration.serialization.ConfigurationSerialization.deserializeObject(args, delegate.value());
+            DelegateDeserialization delegate = itemMetaClass.getAnnotation(DelegateDeserialization.class);
+            return (ItemMeta) ConfigurationSerialization.deserializeObject(args, delegate.value());
         }
         catch (Exception e) { // only display exception on development branch
             if (!ConfigHandler.EDITION_BRANCH.contains("-dev")) {
@@ -378,8 +378,9 @@ public class ItemUtils {
             return "";
         }
 
-        ItemStack item = new ItemStack(MaterialUtils.getType(type), amount);
-        item = (ItemStack) net.coreprotect.database.rollback.Rollback.populateItemStack(item, metadata)[2];
+        Material material = itemFilter(MaterialUtils.getType(type), true);
+        ItemStack item = newItemStack(material, amount);
+        item = (ItemStack) Rollback.populateItemStack(item, metadata)[2];
         String displayName = item.hasItemMeta() && item.getItemMeta().hasDisplayName() ? item.getItemMeta().getDisplayName() : "";
         StringBuilder message = new StringBuilder(Color.ITALIC + displayName + Color.GREY);
 
