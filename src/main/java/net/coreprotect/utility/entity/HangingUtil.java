@@ -1,7 +1,10 @@
 package net.coreprotect.utility.entity;
 
-import java.util.Locale;
-
+import net.coreprotect.bukkit.BukkitAdapter;
+import net.coreprotect.model.BlockGroup;
+import net.coreprotect.utility.BlockUtils;
+import net.coreprotect.utility.ItemUtils;
+import net.coreprotect.utility.MaterialUtils;
 import org.bukkit.Art;
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -14,10 +17,7 @@ import org.bukkit.entity.ItemFrame;
 import org.bukkit.entity.Painting;
 import org.bukkit.inventory.ItemStack;
 
-import net.coreprotect.bukkit.BukkitAdapter;
-import net.coreprotect.model.BlockGroup;
-import net.coreprotect.utility.BlockUtils;
-import net.coreprotect.utility.MaterialUtils;
+import java.util.Locale;
 
 public class HangingUtil {
 
@@ -153,7 +153,7 @@ public class HangingUtil {
 
                             Material type = MaterialUtils.getType(rowData);
                             if (type != null) {
-                                ItemStack istack = new ItemStack(type, 1);
+                                ItemStack istack = ItemUtils.newItemStack(ItemUtils.itemFilter(type, true), 1);
                                 hanging.setItem(istack);
                             }
                         }
@@ -184,7 +184,7 @@ public class HangingUtil {
                 if (e instanceof ItemFrame || e instanceof Painting) {
                     Location el = e.getLocation();
                     if (el.getBlockX() == block.getX() && el.getBlockY() == block.getY() && el.getBlockZ() == block.getZ()) {
-                        if (hangingFace == null || ((Hanging) e).getFacing() == hangingFace) {
+                        if (hangingFace == null || e.getFacing() == hangingFace) {
                             e.remove();
                         }
                     }

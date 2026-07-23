@@ -1,28 +1,21 @@
 package net.coreprotect.database.lookup;
 
-import java.sql.ResultSet;
-import java.sql.Statement;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Locale;
-
-import it.unimi.dsi.fastutil.Pair;
-import org.bukkit.Location;
-import org.bukkit.Material;
-import org.bukkit.command.CommandSender;
-
 import net.coreprotect.config.ConfigHandler;
+import net.coreprotect.database.rollback.Rollback;
 import net.coreprotect.database.statement.UserStatement;
 import net.coreprotect.language.Phrase;
 import net.coreprotect.language.Selector;
 import net.coreprotect.listener.channel.PluginChannelListener;
-import net.coreprotect.utility.ChatUtils;
-import net.coreprotect.utility.Color;
-import net.coreprotect.utility.ItemUtils;
-import net.coreprotect.utility.MaterialUtils;
-import net.coreprotect.utility.StringUtils;
-import net.coreprotect.utility.WorldUtils;
+import net.coreprotect.utility.*;
+import org.bukkit.Location;
+import org.bukkit.Material;
+import org.bukkit.command.CommandSender;
 import org.bukkit.inventory.ItemStack;
+
+import java.sql.ResultSet;
+import java.sql.Statement;
+import java.util.ArrayList;
+import java.util.Locale;
 
 public class ChestTransactionLookup {
 
@@ -90,8 +83,8 @@ public class ChestTransactionLookup {
                 int resultRolledBack = results.getInt("rolled_back");
                 byte[] resultMetadata = results.getBytes("metadata");
                 String tooltip = ItemUtils.getEnchantments(resultMetadata, resultType, resultAmount);
-                ItemStack item = new ItemStack(MaterialUtils.getType(resultType), resultAmount);
-                item = (ItemStack) net.coreprotect.database.rollback.Rollback.populateItemStack(item, resultMetadata)[2];
+                ItemStack item = ItemUtils.newItemStack(ItemUtils.itemFilter(MaterialUtils.getType(resultType), false), resultAmount);
+                item = (ItemStack) Rollback.populateItemStack(item, resultMetadata)[2];
 
                 if (ConfigHandler.playerIdCacheReversed.get(resultUserId) == null) {
                     UserStatement.loadName(statement.getConnection(), resultUserId);

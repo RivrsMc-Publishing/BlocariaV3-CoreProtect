@@ -1,14 +1,11 @@
 package net.coreprotect.database.rollback;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.UUID;
-
+import net.coreprotect.bukkit.BukkitAdapter;
+import net.coreprotect.config.Config;
+import net.coreprotect.config.ConfigHandler;
+import net.coreprotect.database.logger.ItemLogger;
+import net.coreprotect.model.BlockGroup;
+import net.coreprotect.utility.*;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -17,24 +14,16 @@ import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
 import org.bukkit.block.BlockState;
 import org.bukkit.block.data.BlockData;
+import org.bukkit.block.data.MultipleFacing;
+import org.bukkit.block.data.Waterlogged;
 import org.bukkit.block.data.type.Jukebox;
-import org.bukkit.entity.ArmorStand;
-import org.bukkit.entity.Entity;
-import org.bukkit.entity.ItemFrame;
-import org.bukkit.entity.LivingEntity;
-import org.bukkit.entity.Player;
+import org.bukkit.block.data.type.RedstoneWire;
+import org.bukkit.block.data.type.Stairs;
+import org.bukkit.entity.*;
 import org.bukkit.inventory.ItemStack;
 
-import net.coreprotect.bukkit.BukkitAdapter;
-import net.coreprotect.config.Config;
-import net.coreprotect.config.ConfigHandler;
-import net.coreprotect.database.logger.ItemLogger;
-import net.coreprotect.model.BlockGroup;
-import net.coreprotect.utility.BlockUtils;
-import net.coreprotect.utility.ItemUtils;
-import net.coreprotect.utility.MaterialUtils;
-import net.coreprotect.utility.Teleport;
-import net.coreprotect.utility.WorldUtils;
+import java.util.*;
+import java.util.Map.Entry;
 
 public class RollbackProcessor {
 
@@ -208,7 +197,7 @@ public class RollbackProcessor {
                         // block is already changed!
                         BlockData checkData = rowType == Material.AIR ? blockData : rawBlockData;
                         if (checkData != null) {
-                            if (checkData.getAsString().equals(pendingChangeData.getAsString()) || checkData instanceof org.bukkit.block.data.MultipleFacing || checkData instanceof org.bukkit.block.data.type.Stairs || checkData instanceof org.bukkit.block.data.type.RedstoneWire) {
+                            if (checkData.getAsString().equals(pendingChangeData.getAsString()) || checkData instanceof MultipleFacing || checkData instanceof Stairs || checkData instanceof RedstoneWire) {
                                 if (rowType != Material.CHEST && rowType != Material.TRAPPED_CHEST && !BukkitAdapter.ADAPTER.isCopperChest(rowType)) { // always update double chests
                                     changeBlock = false;
                                 }
@@ -225,9 +214,9 @@ public class RollbackProcessor {
                     }
 
                     if ((pendingChangeType == Material.WATER) && (rowType != Material.AIR) && (rowType != Material.CAVE_AIR) && blockData != null) {
-                        if (blockData instanceof org.bukkit.block.data.Waterlogged) {
+                        if (blockData instanceof Waterlogged) {
                             if (Material.WATER.createBlockData().equals(block.getBlockData())) {
-                                org.bukkit.block.data.Waterlogged waterlogged = (org.bukkit.block.data.Waterlogged) blockData;
+                                Waterlogged waterlogged = (Waterlogged) blockData;
                                 waterlogged.setWaterlogged(true);
                             }
                         }
@@ -306,7 +295,7 @@ public class RollbackProcessor {
                         }
 
                         int action = rollbackType == 0 ? (inventoryAction ^ 1) : inventoryAction;
-                        ItemStack itemstack = new ItemStack(inventoryItem, rowAmount);
+                        ItemStack itemstack = ItemUtils.newItemStack(inventoryItem, rowAmount);
                         Object[] populatedStack = RollbackItemHandler.populateItemStack(itemstack, rowMetadata);
                         if (rowAction == ItemLogger.ITEM_REMOVE_ENDER || rowAction == ItemLogger.ITEM_ADD_ENDER) {
                             RollbackUtil.modifyContainerItems(containerType, player.getEnderChest(), (Integer) populatedStack[0], ((ItemStack) populatedStack[2]).clone(), action ^ 1);
@@ -330,7 +319,7 @@ public class RollbackProcessor {
                     }
 
                     if ((rollbackType == 0 && rowRolledBack == 0) || (rollbackType == 1 && rowRolledBack == 1)) {
-                        ItemStack itemstack = new ItemStack(rowType, rowAmount);
+                        ItemStack itemstack = ItemUtils.newItemStack(ItemUtils.itemFilter(rowType, true), rowAmount);
                         Object[] populatedStack = RollbackItemHandler.populateItemStack(itemstack, rowMetadata);
                         String faceData = (String) populatedStack[1];
 

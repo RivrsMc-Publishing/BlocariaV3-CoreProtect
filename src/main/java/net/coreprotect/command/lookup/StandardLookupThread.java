@@ -1,5 +1,25 @@
 package net.coreprotect.command.lookup;
 
+import com.google.common.base.Strings;
+import net.coreprotect.config.ConfigHandler;
+import net.coreprotect.database.Database;
+import net.coreprotect.database.Lookup;
+import net.coreprotect.database.logger.ItemLogger;
+import net.coreprotect.database.lookup.PlayerLookup;
+import net.coreprotect.database.rollback.Rollback;
+import net.coreprotect.database.statement.UserStatement;
+import net.coreprotect.language.Phrase;
+import net.coreprotect.language.Selector;
+import net.coreprotect.listener.channel.PluginChannelHandshakeListener;
+import net.coreprotect.listener.channel.PluginChannelListener;
+import net.coreprotect.utility.*;
+import org.bukkit.Bukkit;
+import org.bukkit.Location;
+import org.bukkit.Material;
+import org.bukkit.command.Command;
+import org.bukkit.command.CommandSender;
+import org.bukkit.inventory.ItemStack;
+
 import java.nio.charset.StandardCharsets;
 import java.sql.Connection;
 import java.sql.Statement;
@@ -8,34 +28,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-
-import org.bukkit.Bukkit;
-import org.bukkit.Location;
-import org.bukkit.Material;
-import org.bukkit.command.Command;
-import org.bukkit.command.CommandSender;
-
-import com.google.common.base.Strings;
-
-import net.coreprotect.config.ConfigHandler;
-import net.coreprotect.database.Database;
-import net.coreprotect.database.Lookup;
-import net.coreprotect.database.logger.ItemLogger;
-import net.coreprotect.database.lookup.PlayerLookup;
-import net.coreprotect.database.statement.UserStatement;
-import net.coreprotect.language.Phrase;
-import net.coreprotect.language.Selector;
-import net.coreprotect.listener.channel.PluginChannelHandshakeListener;
-import net.coreprotect.listener.channel.PluginChannelListener;
-import net.coreprotect.utility.Chat;
-import net.coreprotect.utility.ChatUtils;
-import net.coreprotect.utility.Color;
-import net.coreprotect.utility.EntityUtils;
-import net.coreprotect.utility.ItemUtils;
-import net.coreprotect.utility.MaterialUtils;
-import net.coreprotect.utility.StringUtils;
-import net.coreprotect.utility.WorldUtils;
-import org.bukkit.inventory.ItemStack;
 
 public class StandardLookupThread implements Runnable {
     private final CommandSender player;
@@ -290,8 +282,8 @@ public class StandardLookupThread implements Runnable {
                                 String dname = StringUtils.nameFilter(blockType.name().toLowerCase(Locale.ROOT), ddata);
                                 byte[] metadata = data[11] == null ? null : data[11].getBytes(StandardCharsets.ISO_8859_1);
                                 String tooltip = ItemUtils.getEnchantments(metadata, dtype, amount);
-                                ItemStack item = new ItemStack(MaterialUtils.getType(dtype), amount);
-                                item = (ItemStack) net.coreprotect.database.rollback.Rollback.populateItemStack(item, metadata)[2];
+                                ItemStack item = ItemUtils.newItemStack(blockType, amount);
+                                item = (ItemStack) Rollback.populateItemStack(item, metadata)[2];
 
                                 String selector = Selector.FIRST;
                                 String tag = Color.WHITE + "-";
@@ -393,8 +385,8 @@ public class StandardLookupThread implements Runnable {
                                 if (actions.contains(4) || actions.contains(5) || actions.contains(11) || amount > -1) {
                                     byte[] metadata = data[11] == null ? null : data[11].getBytes(StandardCharsets.ISO_8859_1);
                                     String tooltip = ItemUtils.getEnchantments(metadata, dtype, amount);
-                                    ItemStack item = new ItemStack(MaterialUtils.getType(dtype), amount);
-                                    item = (ItemStack) net.coreprotect.database.rollback.Rollback.populateItemStack(item, metadata)[2];
+                                    ItemStack item = ItemUtils.newItemStack(ItemUtils.itemFilter(MaterialUtils.getType(dtype), true), amount);
+                                    item = (ItemStack) Rollback.populateItemStack(item, metadata)[2];
 
                                     if (daction == 2 || daction == 3) {
                                         phrase = Phrase.LOOKUP_ITEM; // {picked up|dropped}
