@@ -1,9 +1,6 @@
 package net.coreprotect.bukkit;
 
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.Set;
-
+import net.coreprotect.model.BlockGroup;
 import org.bukkit.Color;
 import org.bukkit.DyeColor;
 import org.bukkit.Material;
@@ -20,7 +17,9 @@ import org.bukkit.inventory.meta.PotionMeta;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionType;
 
-import net.coreprotect.model.BlockGroup;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Set;
 
 /**
  * Bukkit adapter implementation for Minecraft 1.20.
@@ -169,20 +168,22 @@ public class Bukkit_v1_20 extends Bukkit_v1_19 {
 
     @Override
     public Material getPlantSeeds(Material material) {
-        switch (material) {
-            case WHEAT:
-                return Material.WHEAT_SEEDS;
-            case PUMPKIN_STEM:
-                return Material.PUMPKIN_SEEDS;
-            case MELON_STEM:
-                return Material.MELON_SEEDS;
-            case BEETROOTS:
-                return Material.BEETROOT_SEEDS;
-            case TORCHFLOWER_CROP:
-                return Material.TORCHFLOWER_SEEDS;
-            default:
-                return material;
-        }
+        return switch (material) {
+            case WHEAT -> Material.WHEAT_SEEDS;
+            case CARROTS -> Material.CARROT;
+            case POTATOES -> Material.POTATO;
+            case BEETROOTS -> Material.BEETROOT_SEEDS;
+            case PUMPKIN_STEM, ATTACHED_PUMPKIN_STEM -> Material.PUMPKIN_SEEDS;
+            case MELON_STEM, ATTACHED_MELON_STEM -> Material.MELON_SEEDS;
+            case TORCHFLOWER_CROP -> Material.TORCHFLOWER_SEEDS;
+            case PITCHER_CROP -> Material.PITCHER_POD;
+            case SWEET_BERRY_BUSH -> Material.SWEET_BERRIES;
+            case CAVE_VINES, CAVE_VINES_PLANT -> Material.GLOW_BERRIES;
+            case COCOA -> Material.COCOA_BEANS;
+            case KELP_PLANT -> Material.KELP;
+            case BAMBOO_SAPLING -> Material.BAMBOO;
+            default -> material;
+        };
     }
 
     @Override

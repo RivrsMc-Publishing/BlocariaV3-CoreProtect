@@ -1,27 +1,15 @@
 package net.coreprotect.bukkit;
 
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-
-import org.bukkit.Color;
-import org.bukkit.DyeColor;
-import org.bukkit.Material;
-import org.bukkit.Tag;
-import org.bukkit.World;
+import net.coreprotect.config.ConfigHandler;
+import net.coreprotect.utility.BlockUtils;
+import org.bukkit.*;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockState;
 import org.bukkit.block.Sign;
 import org.bukkit.block.data.BlockData;
 import org.bukkit.block.data.Directional;
 import org.bukkit.block.data.FaceAttachable;
-import org.bukkit.entity.Arrow;
-import org.bukkit.entity.Entity;
-import org.bukkit.entity.EntityType;
-import org.bukkit.entity.ItemFrame;
-import org.bukkit.entity.LivingEntity;
+import org.bukkit.entity.*;
 import org.bukkit.event.block.SignChangeEvent;
 import org.bukkit.event.inventory.InventoryType;
 import org.bukkit.event.player.PlayerInteractEvent;
@@ -33,8 +21,7 @@ import org.bukkit.potion.PotionData;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionType;
 
-import net.coreprotect.config.ConfigHandler;
-import net.coreprotect.utility.BlockUtils;
+import java.util.*;
 
 /**
  * Base adapter implementation for Bukkit API compatibility.
@@ -114,12 +101,12 @@ public class BukkitAdapter implements BukkitInterface {
     }
 
     @Override
-    public void getWolfVariant(org.bukkit.entity.Wolf wolf, List<Object> info) {
+    public void getWolfVariant(Wolf wolf, List<Object> info) {
         // Base implementation does nothing - Wolf variants only exist in 1.21+
     }
 
     @Override
-    public void setWolfVariant(org.bukkit.entity.Wolf wolf, Object value) {
+    public void setWolfVariant(Wolf wolf, Object value) {
         // Base implementation does nothing - Wolf variants only exist in 1.21+
     }
 
@@ -150,12 +137,29 @@ public class BukkitAdapter implements BukkitInterface {
         switch (material) {
             case WHEAT:
                 return Material.WHEAT_SEEDS;
-            case PUMPKIN_STEM:
-                return Material.PUMPKIN_SEEDS;
-            case MELON_STEM:
-                return Material.MELON_SEEDS;
+            case CARROTS:
+                return Material.CARROT;
+            case POTATOES:
+                return Material.POTATO;
             case BEETROOTS:
                 return Material.BEETROOT_SEEDS;
+            case PUMPKIN_STEM:
+            case ATTACHED_PUMPKIN_STEM:
+                return Material.PUMPKIN_SEEDS;
+            case MELON_STEM:
+            case ATTACHED_MELON_STEM:
+                return Material.MELON_SEEDS;
+            case SWEET_BERRY_BUSH:
+                return Material.SWEET_BERRIES;
+            case CAVE_VINES:
+            case CAVE_VINES_PLANT:
+                return Material.GLOW_BERRIES;
+            case COCOA:
+                return Material.COCOA_BEANS;
+            case KELP_PLANT:
+                return Material.KELP;
+            case BAMBOO_SAPLING:
+                return Material.BAMBOO;
             default:
                 return material;
         }
