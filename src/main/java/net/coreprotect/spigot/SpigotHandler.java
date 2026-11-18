@@ -1,5 +1,8 @@
 package net.coreprotect.spigot;
 
+import java.lang.reflect.Method;
+import java.util.List;
+import java.util.UUID;
 import java.util.regex.Matcher;
 
 import net.kyori.adventure.text.Component;
@@ -8,12 +11,15 @@ import net.kyori.adventure.text.format.TextColor;
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.ConsoleCommandSender;
+import org.bukkit.entity.Villager;
 
 import net.coreprotect.config.Config;
+import net.coreprotect.model.entity.VillagerReputationData;
 import net.coreprotect.utility.Chat;
 import net.coreprotect.utility.Color;
 import net.coreprotect.utility.StringUtils;
 import net.coreprotect.utility.Util;
+import net.coreprotect.utility.ErrorReporter;
 import net.md_5.bungee.api.ChatColor;
 import net.md_5.bungee.api.chat.BaseComponent;
 import net.md_5.bungee.api.chat.ClickEvent;
@@ -79,8 +85,9 @@ public class SpigotHandler extends SpigotAdapter implements SpigotInterface {
             } else {
                 super.addHoverComponent(message, data);
             }
-        } catch (Exception e) {
-            e.printStackTrace();
+        }
+        catch (Exception e) {
+            ErrorReporter.report(e);
         }
     }
 
@@ -134,6 +141,49 @@ public class SpigotHandler extends SpigotAdapter implements SpigotInterface {
     }
 
     @Override
+    public boolean setVillagerReputations(Villager villager, List<?> reputations) {
+        try {
+            Class<?> reputationTypeClass = Class.forName("org.bukkit.entity.Villager$ReputationType");
+            Method setReputation = villager.getClass().getMethod("setReputation", UUID.class, reputationTypeClass, int.class);
+
+            for (Object reputationObject : reputations) {
+                VillagerReputationData data = VillagerReputationData.parse(reputationObject);
+                if (data == null) {
+                    continue;
+                }
+
+                for (VillagerReputationData.Value value : data.values()) {
+                    Object type = parseEnumValue(reputationTypeClass, value.type());
+                    if (type != null) {
+                        setReputation.invoke(villager, data.uuid(), type, value.amount());
+                    }
+                }
+            }
+
+            return true;
+        }
+        catch (Exception e) {
+            return false;
+        }
+    }
+
+    @Override
+    public Object getVillagerGossipDecayTime(Villager villager) {
+        return invokeNoArgumentMethod(villager, "getGossipDecayTime");
+    }
+
+    @Override
+    public void setVillagerGossipDecayTime(Villager villager, Object value) {
+        if (value instanceof Number) {
+            try {
+                villager.getClass().getMethod("setGossipDecayTime", long.class).invoke(villager, ((Number) value).longValue());
+            }
+            catch (Exception e) {
+            }
+        }
+    }
+
+    @Override
     public void sendComponent(CommandSender sender, String string, String bypass, Object... args) {
         net.kyori.adventure.text.TextComponent.Builder message = Component.text();
         StringBuilder builder = new StringBuilder();
@@ -154,8 +204,7 @@ public class SpigotHandler extends SpigotAdapter implements SpigotInterface {
                 String[] data = value.split("\\|", 3);
                 if (data[0].equals(Chat.COMPONENT_COMMAND)) {
                     Component component = LegacyComponentSerializer.legacySection().deserialize(data[2])
-                            .clickEvent(net.kyori.adventure.text.event.ClickEvent.clickEvent(net.kyori.adventure.text.event.ClickEvent.Action.RUN_COMMAND,
-                                    data[1]))
+                            .clickEvent(net.kyori.adventure.text.event.ClickEvent.runCommand(data[1]))
                             .hoverEvent(net.kyori.adventure.text.event.HoverEvent.showText(LegacyComponentSerializer
                                     .legacySection().deserialize(StringUtils.hoverCommandFilter(data[1]))));
                     message.append(component);
@@ -171,9 +220,11 @@ public class SpigotHandler extends SpigotAdapter implements SpigotInterface {
                     }
 
                     ItemStack item = (ItemStack) args[argIndex++];
-                    ItemStack displayItem = item.clone();
-                    displayItem.setAmount(Math.max(1, Math.min(item.getAmount(), 99)));
-                    message.append(displayItem.displayName());
+                    if (item.getAmount() > item.getMaxStackSize() || item.getAmount() > 99) {
+                        item = item.clone();
+                        item.setAmount(item.getMaxStackSize());
+                    }
+                    message.append(item.displayName());
                 }
             } else {
                 builder.append(matcher.group(2));
@@ -204,6 +255,25 @@ public class SpigotHandler extends SpigotAdapter implements SpigotInterface {
         }
 
         builder.setLength(0);
+    }
+
+    private static Object invokeNoArgumentMethod(Object target, String methodName) {
+        try {
+            return target.getClass().getMethod(methodName).invoke(target);
+        }
+        catch (Exception e) {
+            return null;
+        }
+    }
+
+    @SuppressWarnings({ "unchecked", "rawtypes" })
+    private static Object parseEnumValue(Class<?> enumClass, String value) {
+        try {
+            return Enum.valueOf((Class<? extends Enum>) enumClass.asSubclass(Enum.class), value);
+        }
+        catch (Exception e) {
+            return null;
+        }
     }
 
     private static void addBuilder(net.kyori.adventure.text.TextComponent.Builder message, StringBuilder builder) {

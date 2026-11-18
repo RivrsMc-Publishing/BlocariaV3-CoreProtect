@@ -3,17 +3,26 @@ package net.coreprotect.listener.player.inspector;
 import java.sql.Connection;
 import java.sql.Statement;
 import java.util.List;
+import java.util.UUID;
 
 import net.coreprotect.database.lookup.LookupResult;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
 
+import net.coreprotect.config.ConfigHandler;
 import net.coreprotect.database.lookup.ChestTransactionLookup;
+import net.coreprotect.database.statement.EntitySpawnStatement;
+import net.coreprotect.language.Phrase;
+import net.coreprotect.language.Selector;
 import net.coreprotect.utility.Chat;
+import net.coreprotect.utility.Color;
+import net.coreprotect.utility.ErrorReporter;
 
 public class ContainerInspector extends BaseInspector {
 
     public void performContainerLookup(final Player player, final Location finalLocation) {
+        ConfigHandler.lookupEntityContainer.remove(player.getName());
+
         class BasicThread implements Runnable {
             @Override
             public void run() {
@@ -35,7 +44,7 @@ public class ContainerInspector extends BaseInspector {
                     Chat.sendMessage(player, e.getMessage());
                 }
                 catch (Exception e) {
-                    e.printStackTrace();
+                    ErrorReporter.report(e);
                 }
                 finally {
                     finishInspection(player);
@@ -45,6 +54,49 @@ public class ContainerInspector extends BaseInspector {
 
         Runnable runnable = new BasicThread();
         Thread thread = new Thread(runnable);
+        thread.start();
+    }
+
+    public void performEntityContainerLookup(final Player player, final UUID entityUuid, final Location location) {
+        ConfigHandler.lookupEntityContainer.remove(player.getName());
+        ConfigHandler.lookupType.remove(player.getName());
+
+        class BasicThread implements Runnable {
+            @Override
+            public void run() {
+                try {
+                    checkPreconditions(player);
+
+                    try (Connection connection = getDatabaseConnection(player)) {
+                        Integer entitySpawnRowId = EntitySpawnStatement.findRowIdByUuid(connection, entityUuid);
+
+                        if (entitySpawnRowId == null) {
+                            ConfigHandler.lookupEntityContainer.remove(player.getName());
+                            ConfigHandler.lookupType.remove(player.getName());
+                            ConfigHandler.lookupCommand.remove(player.getName());
+                            Chat.sendMessage(player, Color.DARK_AQUA + "CoreProtect " + Color.WHITE + "- " + Phrase.build(Phrase.NO_DATA_LOCATION, Selector.SECOND));
+                            return;
+                        }
+
+                        try (Statement statement = connection.createStatement()) {
+                            LookupResult blockData = ChestTransactionLookup.performLookup(null, statement, location, player, 1, 7, false, entitySpawnRowId);
+                            blockData.send(player);
+                        }
+                    }
+                }
+                catch (InspectionException e) {
+                    Chat.sendMessage(player, e.getMessage());
+                }
+                catch (Exception e) {
+                    ErrorReporter.report(e);
+                }
+                finally {
+                    finishInspection(player);
+                }
+            }
+        }
+
+        Thread thread = new Thread(new BasicThread());
         thread.start();
     }
 }

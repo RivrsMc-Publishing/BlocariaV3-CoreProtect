@@ -18,6 +18,11 @@ import org.bukkit.entity.Painting;
 import org.bukkit.inventory.ItemStack;
 
 import java.util.Locale;
+import net.coreprotect.bukkit.BukkitAdapter;
+import net.coreprotect.model.BlockGroup;
+import net.coreprotect.utility.BlockUtils;
+import net.coreprotect.utility.MaterialUtils;
+import net.coreprotect.utility.ErrorReporter;
 
 public class HangingUtil {
 
@@ -39,7 +44,7 @@ public class HangingUtil {
                     hangingFace = BlockFace.valueOf(hangingData.split("=")[1].toUpperCase(Locale.ROOT));
                 }
                 catch (Exception e) {
-                    e.printStackTrace();
+                    ErrorReporter.report(e);
                 }
             }
 
@@ -101,7 +106,11 @@ public class HangingUtil {
             if (faceSet != null && face != null) {
                 if (rowType.equals(Material.PAINTING)) {
                     String name = MaterialUtils.getArtName(rowData);
-                    Art painting = Art.getByName(name.toUpperCase(Locale.ROOT));
+                    Art painting = BukkitAdapter.ADAPTER.getPaintingArt(name);
+                    if (painting == null) {
+                        return;
+                    }
+
                     int height = painting.getBlockHeight();
                     int width = painting.getBlockWidth();
                     int paintingX = x;
@@ -164,7 +173,7 @@ public class HangingUtil {
             }
         }
         catch (Exception e) {
-            e.printStackTrace();
+            ErrorReporter.report(e);
         }
     }
 
@@ -176,7 +185,7 @@ public class HangingUtil {
                     hangingFace = BlockFace.valueOf(hangingData.split("=")[1].toUpperCase(Locale.ROOT));
                 }
                 catch (Exception e) {
-                    e.printStackTrace();
+                    ErrorReporter.report(e);
                 }
             }
 
@@ -192,7 +201,7 @@ public class HangingUtil {
             }
         }
         catch (Exception e) {
-            e.printStackTrace();
+            ErrorReporter.report(e);
         }
     }
 
