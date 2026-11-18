@@ -3,6 +3,9 @@ package net.coreprotect.database.rollback;
 import java.util.*;
 import java.util.Map.Entry;
 
+import org.bukkit.block.data.MultipleFacing;
+import org.bukkit.block.data.type.RedstoneWire;
+import org.bukkit.block.data.type.Stairs;
 import net.coreprotect.bukkit.BukkitAdapter;
 import net.coreprotect.config.Config;
 import net.coreprotect.config.ConfigHandler;
@@ -28,6 +31,9 @@ import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 
 import net.coreprotect.CoreProtect;
+import org.bukkit.block.data.MultipleFacing;
+import org.bukkit.block.data.type.RedstoneWire;
+import org.bukkit.block.data.type.Stairs;
 import net.coreprotect.bukkit.BukkitAdapter;
 import net.coreprotect.config.Config;
 import net.coreprotect.config.ConfigHandler;

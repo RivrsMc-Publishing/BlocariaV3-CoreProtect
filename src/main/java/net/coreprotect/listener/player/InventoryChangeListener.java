@@ -68,7 +68,7 @@ public final class InventoryChangeListener extends Queue implements Listener {
                 Material type = blockState.getType();
 
                 if (BlockGroup.CONTAINERS.contains(type) && blockState instanceof InventoryHolder) {
-                    if (!Config.getConfig(location.getWorld()).itemTransactionsEnabled(type)) {
+                    if (!Config.getConfig(blockState.getWorld()).itemTransactionsEnabled(type)) {
                         return false;
                     }
                     InventoryHolder inventoryHolder = (InventoryHolder) blockState;
@@ -328,7 +328,7 @@ public final class InventoryChangeListener extends Queue implements Listener {
         }
         inventoryProcessing.put(loggingChestId, true);
 
-        Material containerType = (enderChest != true ? null : Material.ENDER_CHEST);
+        Material containerType = enderChest ? Material.ENDER_CHEST : (BlockGroup.DISPENSER_CONTAINERS.contains(blockType) ? blockType : null);
         ContainerTransactionDispatcher.submit(inventoryLocation, () -> {
             try {
                 inventoryProcessing.remove(loggingChestId);
